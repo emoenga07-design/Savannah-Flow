@@ -826,7 +826,7 @@ async function runSearch(){
     conflicting= data.conflicting_reports || null;
     briefType  = data.brief_type || "4section";
   } catch(err){
-    brief = `__ERROR__${err.message}`;
+    brief = `__ERROR__${err.message || JSON.stringify(err)}`;
   }
 
   clearInterval(interval);
