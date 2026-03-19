@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Savannah Flow — African Intelligence Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* ═══════════════════════════════════════════════════
+   SAVANNAH FLOW — FULL PLATFORM
+   Replace the three config values in the script below
+   ═══════════════════════════════════════════════════ */
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --navy:#1A1A2E;
+  --navy-l:#20203A;
+  --navy-m:#16213E;
+  --navy-c:#1E1E36;
+  --gold:#C9A84C;
+  --gold-l:#E2C46A;
+  --gold-dim:rgba(201,168,76,.12);
+  --gold-b:rgba(201,168,76,.28);
+  --text:#F0EDE6;
+  --text-m:#A89F8C;
+  --text-d:#5E5850;
+  --surf:rgba(255,255,255,.03);
+  --bdr:rgba(255,255,255,.07);
+  --bdr-m:rgba(255,255,255,.13);
+  --ok:#4CAF50;
+  --err:#E24B4A;
+  --warn:#E8A020;
+}
+
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text);min-height:100vh;line-height:1.6;overflow-x:hidden}
+
+/* ── TICKER ─────────────────────────────────────── */
+.ticker-wrap{background:var(--navy-m);border-bottom:.5px solid var(--gold-b);padding:8px 0;overflow:hidden}
+.ticker-track{display:flex;gap:0;white-space:nowrap;animation:ticker 40s linear infinite}
+.ticker-track:hover{animation-play-state:paused}
+.ticker-item{font-size:12px;color:var(--text-m);padding:0 32px;border-right:.5px solid var(--bdr);flex-shrink:0}
+.ticker-item::before{content:"◆ ";color:var(--gold);font-size:9px}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* ── HEADER ─────────────────────────────────────── */
+.hd{border-bottom:.5px solid var(--gold-b);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:58px;background:var(--navy);z-index:200;position:sticky;top:0}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:30px;height:30px;border:1.5px solid var(--gold);border-radius:6px;display:flex;align-items:center;justify-content:center}
+.logo-mark svg{width:16px;height:16px}
+.logo-text{font-family:'Playfair Display',serif;font-size:16px;font-weight:600}
+.logo-sub{font-size:9px;color:var(--gold);letter-spacing:.14em;text-transform:uppercase;margin-top:-1px}
+.hd-right{display:flex;align-items:center;gap:8px}
+.tier-badge{font-size:11px;padding:3px 9px;border-radius:4px;font-weight:500;text-transform:uppercase;letter-spacing:.06em}
+.tier-guest{background:var(--surf);border:.5px solid var(--bdr);color:var(--text-d)}
+.tier-basic{background:var(--gold-dim);border:.5px solid var(--gold-b);color:var(--gold)}
+.tier-pro{background:rgba(76,175,80,.12);border:.5px solid rgba(76,175,80,.3);color:#81C784}
+.tier-elite{background:rgba(201,168,76,.2);border:.5px solid var(--gold-b);color:var(--gold-l)}
+.hd-btn{font-size:12px;color:var(--text-m);background:var(--surf);border:.5px solid var(--bdr-m);padding:5px 11px;border-radius:5px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .18s}
+.hd-btn:hover{color:var(--gold);border-color:var(--gold-b)}
+.searches-left{font-size:11px;color:var(--text-d)}
+.searches-left span{color:var(--gold);font-weight:500}
+
+/* ── HERO ────────────────────────────────────────── */
+.hero{padding:2.5rem 2rem 1.2rem;max-width:720px;margin:0 auto;text-align:center}
+.hero-eye{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:.8rem}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(22px,5vw,38px);font-weight:700;line-height:1.2;margin-bottom:.7rem}
+.hero h1 em{font-style:italic;color:var(--gold)}
+.hero p{font-size:14px;color:var(--text-m);max-width:460px;margin:0 auto 1.4rem;font-weight:300}
+.gold-rule{width:32px;height:1.5px;background:var(--gold);margin:0 auto 1.4rem;border-radius:2px}
+
+/* ── TOPICS ─────────────────────────────────────── */
+.topics{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:1.6rem}
+.t-btn{font-size:12px;color:var(--text-m);background:var(--surf);border:.5px solid var(--bdr);padding:5px 12px;border-radius:20px;cursor:pointer;transition:all .18s;font-family:'DM Sans',sans-serif}
+.t-btn:hover,.t-btn.on{color:var(--gold);border-color:var(--gold-b);background:var(--gold-dim)}
+
+/* ── SEARCH ─────────────────────────────────────── */
+.swrap{max-width:700px;margin:0 auto;padding:0 2rem .7rem}
+.sbox{display:flex;border:1px solid var(--gold-b);border-radius:10px;overflow:hidden;background:var(--navy-l);transition:border-color .2s}
+.sbox:focus-within{border-color:var(--gold)}
+.sin{flex:1;background:transparent;border:none;outline:none;padding:12px 15px;font-size:14px;color:var(--text);font-family:'DM Sans',sans-serif}
+.sin::placeholder{color:var(--text-d)}
+.sbtn{background:var(--gold);border:none;padding:0 18px;cursor:pointer;color:var(--navy);font-weight:500;font-size:13px;font-family:'DM Sans',sans-serif;transition:background .18s;white-space:nowrap}
+.sbtn:hover{background:var(--gold-l)}
+.sbtn:disabled{opacity:.45;cursor:not-allowed}
+
+/* ── TRENDING ────────────────────────────────────── */
+.trending{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:9px}
+.trend-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-d);font-weight:500;white-space:nowrap}
+.trend-pill{font-size:12px;color:var(--text-m);border:.5px solid var(--bdr);padding:4px 11px;border-radius:14px;cursor:pointer;transition:all .18s;font-family:'DM Sans',sans-serif;background:transparent}
+.trend-pill:hover{color:var(--gold);border-color:var(--gold-b);background:var(--gold-dim)}
+
+/* ── MAIN ────────────────────────────────────────── */
+.main{max-width:700px;margin:0 auto;padding:.5rem 2rem 5rem}
+
+/* ── WEEKLY POST ─────────────────────────────────── */
+.weekly-section{margin-bottom:1.8rem}
+.weekly-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);font-weight:500;margin-bottom:.7rem;display:flex;align-items:center;gap:8px}
+.weekly-label::after{content:"";flex:1;height:.5px;background:var(--gold-b)}
+
+/* ── BRIEF CARD ──────────────────────────────────── */
+.bcard{border:.5px solid var(--gold-b);border-radius:12px;overflow:hidden;margin-bottom:1.4rem;animation:fadeUp .35s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.bhead{background:var(--navy-m);border-bottom:.5px solid var(--gold-b);padding:11px 16px;display:flex;align-items:center;justify-content:space-between}
+.bmeta{display:flex;align-items:center;gap:7px}
+.ldot{width:7px;height:7px;border-radius:50%;background:var(--gold);flex-shrink:0}
+.ldot.pulse{animation:dp 2s infinite}
+@keyframes dp{0%,100%{opacity:1}50%{opacity:.3}}
+.blabel{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--gold);font-weight:500}
+.bacts{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ibtn{background:transparent;border:.5px solid var(--bdr);color:var(--text-m);font-size:11px;padding:3px 8px;border-radius:4px;cursor:pointer;transition:all .18s;font-family:'DM Sans',sans-serif}
+.ibtn:hover{color:var(--gold);border-color:var(--gold-b);background:var(--gold-dim)}
+.btime{font-size:11px;color:var(--text-d)}
+
+/* ── BRIEF BODY ──────────────────────────────────── */
+.bbody{padding:20px;background:var(--navy-c)}
+.bbody h3{font-family:'Playfair Display',serif;font-size:15px;font-weight:600;color:var(--text);margin:1.3rem 0 .45rem;padding-top:.9rem;border-top:.5px solid var(--bdr)}
+.bbody h3:first-child{margin-top:0;padding-top:0;border-top:none}
+.bbody p{font-size:14px;color:var(--text);line-height:1.78;margin-bottom:.65rem}
+.bbody p:last-child{margin-bottom:0}
+.bbody strong{color:var(--gold);font-weight:500}
+
+/* ── BLUR WALL ───────────────────────────────────── */
+.blur-wall{position:relative;margin-top:.5rem}
+.blur-content{filter:blur(4px);user-select:none;pointer-events:none;opacity:.6}
+.blur-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(to bottom,transparent,var(--navy-c) 40%);padding:2rem 1rem}
+.blur-title{font-family:'Playfair Display',serif;font-size:16px;font-weight:600;color:var(--text);margin-bottom:.4rem;text-align:center}
+.blur-sub{font-size:13px;color:var(--text-m);margin-bottom:1rem;text-align:center}
+.blur-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.upgrade-btn{background:var(--gold);border:none;border-radius:7px;padding:8px 18px;font-size:13px;font-weight:500;color:var(--navy);cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .18s}
+.upgrade-btn:hover{background:var(--gold-l)}
+.upgrade-btn.outline{background:transparent;border:.5px solid var(--gold-b);color:var(--gold)}
+.upgrade-btn.outline:hover{background:var(--gold-dim)}
+
+/* ── SOURCES STRIP ───────────────────────────────── */
+.src-strip{border-top:.5px solid var(--bdr);padding:10px 16px;background:var(--navy-m);display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap}
+.src-label{font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--text-d);font-weight:500;white-space:nowrap;margin-top:3px}
+.src-pills{display:flex;flex-wrap:wrap;gap:5px}
+.src-pill{font-size:11px;color:var(--text-m);background:var(--surf);border:.5px solid var(--bdr);padding:2px 8px;border-radius:10px}
+.conf-badge{font-size:10px;padding:2px 8px;border-radius:9px;font-weight:500;white-space:nowrap}
+.conf-high{background:rgba(76,175,80,.12);border:.5px solid rgba(76,175,80,.3);color:#81C784}
+.conf-medium{background:rgba(232,160,32,.12);border:.5px solid rgba(232,160,32,.3);color:#FFB74D}
+.conf-low{background:rgba(226,75,74,.12);border:.5px solid rgba(226,75,74,.3);color:#EF9A9A}
+.conflict-note{width:100%;font-size:12px;color:var(--warn);background:rgba(232,160,32,.07);border:.5px solid rgba(232,160,32,.2);border-radius:6px;padding:6px 11px;margin-top:3px}
+
+/* ── LOADING ─────────────────────────────────────── */
+.loading{display:flex;align-items:center;gap:9px;padding:4px 0}
+.dots{display:flex;gap:4px}
+.dots span{width:5px;height:5px;border-radius:50%;background:var(--gold);animation:bounce 1.2s infinite}
+.dots span:nth-child(2){animation-delay:.2s}
+.dots span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,80%,100%{transform:scale(.55);opacity:.35}40%{transform:scale(1);opacity:1}}
+.ltxt{font-size:13px;color:var(--text-m)}
+.phase-tag{font-size:10px;color:var(--gold);background:var(--gold-dim);border:.5px solid var(--gold-b);padding:2px 8px;border-radius:9px;margin-left:6px}
+
+/* ── HISTORY ─────────────────────────────────────── */
+.hist-sec{margin-top:2rem}
+.hist-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:.8rem;padding-bottom:7px;border-bottom:.5px solid var(--bdr)}
+.hist-title{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-d);font-weight:500}
+.clr-btn{font-size:11px;color:var(--text-d);background:transparent;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:color .18s}
+.clr-btn:hover{color:var(--err)}
+.hi{border:.5px solid var(--bdr);border-radius:8px;margin-bottom:7px;overflow:hidden}
+.hi:hover{border-color:var(--bdr-m)}
+.hi-head{padding:9px 13px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;gap:9px;background:var(--surf)}
+.hi-q{font-size:13px;color:var(--text-m);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.hi-meta{display:flex;align-items:center;gap:7px;flex-shrink:0}
+.hi-time{font-size:11px;color:var(--text-d)}
+.hi-chev{font-size:9px;color:var(--text-d);transition:transform .2s}
+.hi.open .hi-chev{transform:rotate(180deg)}
+.hi-body{display:none;padding:13px 15px;background:var(--navy-c);border-top:.5px solid var(--bdr);font-size:13px;color:var(--text);line-height:1.75}
+.hi.open .hi-body{display:block}
+.hi-body strong{color:var(--gold);font-weight:500}
+.hi-body h3{font-family:'Playfair Display',serif;font-size:13px;font-weight:600;color:var(--text);margin:.9rem 0 .35rem;padding-top:.7rem;border-top:.5px solid var(--bdr)}
+.hi-body h3:first-child{margin-top:0;padding-top:0;border-top:none}
+.cloud-tag{font-size:10px;color:var(--ok);background:rgba(76,175,80,.1);border:.5px solid rgba(76,175,80,.25);padding:1px 6px;border-radius:7px}
+
+/* ── UPSELL ──────────────────────────────────────── */
+.upsell{border:.5px solid var(--gold-b);border-radius:9px;background:var(--gold-dim);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:1.2rem;animation:fadeUp .3s ease}
+.upsell-txt{font-size:13px;color:var(--text-m)}
+.upsell-txt strong{color:var(--text);font-weight:500}
+.upsell-lnk{font-size:12px;font-weight:500;color:var(--gold);white-space:nowrap;text-decoration:none;border:.5px solid var(--gold-b);padding:4px 11px;border-radius:5px;transition:background .18s}
+.upsell-lnk:hover{background:var(--gold-dim)}
+
+/* ── ERR ─────────────────────────────────────────── */
+.err-box{background:rgba(226,75,74,.07);border:.5px solid rgba(226,75,74,.25);border-radius:7px;padding:11px 15px;font-size:13px;color:#F09595}
+
+/* ── MODALS ──────────────────────────────────────── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(8,8,18,.9);z-index:500;align-items:center;justify-content:center;padding:1.2rem}
+.modal-bg.show{display:flex}
+.modal{background:var(--navy-c);border:1px solid var(--gold-b);border-radius:14px;padding:1.8rem;max-width:420px;width:100%;animation:fadeUp .3s ease;max-height:90vh;overflow-y:auto}
+.modal-icon{width:40px;height:40px;border:1.5px solid var(--gold);border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:1rem}
+.modal h2{font-family:'Playfair Display',serif;font-size:19px;font-weight:700;color:var(--text);margin-bottom:.45rem;line-height:1.3}
+.modal p{font-size:13px;color:var(--text-m);margin-bottom:1.1rem;line-height:1.6}
+.modal-in{width:100%;background:var(--navy-l);border:1px solid var(--bdr-m);border-radius:7px;padding:10px 13px;font-size:14px;color:var(--text);font-family:'DM Sans',sans-serif;outline:none;margin-bottom:8px;transition:border-color .2s}
+.modal-in:focus{border-color:var(--gold)}
+.modal-in::placeholder{color:var(--text-d)}
+.modal-btn{width:100%;background:var(--gold);border:none;border-radius:7px;padding:10px;font-size:14px;font-weight:500;color:var(--navy);cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .18s;margin-bottom:8px}
+.modal-btn:hover{background:var(--gold-l)}
+.modal-btn:disabled{opacity:.5;cursor:not-allowed}
+.modal-btn.outline{background:transparent;border:.5px solid var(--gold-b);color:var(--gold)}
+.modal-btn.outline:hover{background:var(--gold-dim)}
+.modal-skip{text-align:center;font-size:12px;color:var(--text-d);cursor:pointer;transition:color .18s;margin-top:4px}
+.modal-skip:hover{color:var(--text-m)}
+.modal-err{font-size:12px;color:#EF9A9A;margin-top:5px;text-align:center;min-height:16px}
+.modal-note{font-size:11px;color:var(--text-d);text-align:center;margin-top:8px}
+.modal-tabs{display:flex;gap:7px;margin-bottom:.9rem}
+.m-tab{flex:1;padding:7px;border:.5px solid var(--bdr);border-radius:6px;font-size:13px;color:var(--text-m);cursor:pointer;text-align:center;transition:all .18s;background:transparent;font-family:'DM Sans',sans-serif}
+.m-tab.on{color:var(--gold);border-color:var(--gold-b);background:var(--gold-dim)}
+.tier-option{border:.5px solid var(--bdr);border-radius:8px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:all .18s}
+.tier-option:hover,.tier-option.selected{border-color:var(--gold-b);background:var(--gold-dim)}
+.tier-name-lbl{font-size:14px;font-weight:500;color:var(--text);margin-bottom:3px}
+.tier-price-lbl{font-size:13px;color:var(--gold);font-weight:500}
+.tier-feats{font-size:12px;color:var(--text-m);margin-top:4px;line-height:1.5}
+.divider{text-align:center;font-size:11px;color:var(--text-d);margin:8px 0;position:relative}
+.divider::before,.divider::after{content:"";position:absolute;top:50%;width:42%;height:.5px;background:var(--bdr)}
+.divider::before{left:0}.divider::after{right:0}
+
+/* ── TOAST ───────────────────────────────────────── */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--navy-c);border:.5px solid var(--gold-b);border-radius:7px;padding:8px 18px;font-size:13px;color:var(--gold);opacity:0;transition:opacity .3s;pointer-events:none;z-index:600;white-space:nowrap}
+.toast.show{opacity:1}
+
+/* ── FOOTER ──────────────────────────────────────── */
+.ft{border-top:.5px solid var(--bdr);padding:14px 2rem;display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--text-d);max-width:700px;margin:0 auto}
+
+/* ── RESPONSIVE ──────────────────────────────────── */
+@media(max-width:600px){
+  .hd{padding:0 1rem}
+  .hero{padding:2rem 1rem 1rem}
+  .swrap{padding:0 1rem .7rem}
+  .main{padding:.5rem 1rem 4rem}
+  .ft{padding:12px 1rem}
+  .logo-sub,.searches-left{display:none}
+  .bacts{gap:4px}
+}
+
+/* ── PRINT ───────────────────────────────────────── */
+@media print{
+  .ticker-wrap,.hd,.hero,.swrap,.topics,.upsell,.hist-sec,.ft,.bacts,.modal-bg,.toast,.blur-overlay,.blur-wall .blur-content{display:block!important;filter:none!important}
+  .modal-bg{display:none!important}
+  body{background:#fff;color:#111}
+  .bcard{border:1px solid #ccc;break-inside:avoid}
+  .bbody,.bhead,.src-strip{background:#fff}
+  .bbody h3,.bbody p,.blabel{color:#111}
+  .bbody strong{color:#8a6c22}
+}
+</style>
+</head>
+<body>
+
+<!-- ── TICKER ── -->
+<div class="ticker-wrap">
+  <div class="ticker-track" id="tickerTrack">
+    <span class="ticker-item">Loading African market signals...</span>
+  </div>
+</div>
+
+<!-- ── HEADER ── -->
+<header class="hd">
+  <div class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 16 16" fill="none">
+        <path d="M8 2v12M2 8h12M4 4l8 8M12 4l-8 8" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div>
+      <div class="logo-text">Savannah Flow</div>
+      <div class="logo-sub">African Intelligence Platform</div>
+    </div>
+  </div>
+  <div class="hd-right">
+    <span class="searches-left" id="searchesLeft"></span>
+    <span class="tier-badge tier-guest" id="tierBadge">Guest</span>
+    <div id="authArea">
+      <button class="hd-btn" onclick="showAuth()">Sign in</button>
+    </div>
+    <button class="hd-btn" onclick="showUpgrade()" id="upgradeBtn" style="display:none">Upgrade ↑</button>
+  </div>
+</header>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-eye">Africa's intelligence layer</div>
+  <h1>The picture, complete.<br><em>The conclusions, yours.</em></h1>
+  <p>Multi-source African business and geopolitical intelligence — researched, cross-referenced, and synthesised. No directives. Just clarity.</p>
+  <div class="gold-rule"></div>
+  <div class="topics">
+    <button class="t-btn on" onclick="setTopic(this,'')">All signals</button>
+    <button class="t-btn" onclick="setTopic(this,'East Africa')">East Africa</button>
+    <button class="t-btn" onclick="setTopic(this,'West Africa')">West Africa</button>
+    <button class="t-btn" onclick="setTopic(this,'FX & Currency')">FX & Currency</button>
+    <button class="t-btn" onclick="setTopic(this,'Trade & Ports')">Trade & Ports</button>
+    <button class="t-btn" onclick="setTopic(this,'Energy')">Energy</button>
+    <button class="t-btn" onclick="setTopic(this,'Agriculture')">Agriculture</button>
+    <button class="t-btn" onclick="setTopic(this,'Debt & Loans')">Debt & Loans</button>
+  </div>
+</section>
+
+<!-- ── SEARCH ── -->
+<div class="swrap">
+  <div class="sbox">
+    <input class="sin" id="qin" type="text" placeholder="Ask: Kenya port concession — the full picture. / Nigeria FX — who actually gains." />
+    <button class="sbtn" id="sbtn" onclick="runSearch()">Analyse ↗</button>
+  </div>
+  <div class="trending" id="trendingArea">
+    <span class="trend-label">Trending</span>
+    <span class="trend-pill" style="color:var(--text-d)">Loading...</span>
+  </div>
+</div>
+
+<!-- ── MAIN ── -->
+<div class="main" id="mainArea">
+  <!-- Weekly post renders here -->
+  <div class="weekly-section" id="weeklySection" style="display:none">
+    <div class="weekly-label">This week's intelligence brief</div>
+    <div id="weeklyPostCard"></div>
+  </div>
+</div>
+
+<!-- ── SIGN UP MODAL (email capture → Substack) ── -->
+<div class="modal-bg" id="signupModal">
+  <div class="modal">
+    <div class="modal-icon">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <path d="M10 2C5.6 2 2 5.6 2 10s3.6 8 8 8 8-3.6 8-8-3.6-8-8-8zm0 3a2.5 2.5 0 110 5 2.5 2.5 0 010-5zm0 10.5c-2.1 0-3.96-1.07-5.08-2.7C5.27 11.4 7.55 10.5 10 10.5s4.73.9 5.08 2.3C13.96 14.43 12.1 15.5 10 15.5z" fill="#C9A84C"/>
+      </svg>
+    </div>
+    <h2>Start reading for free</h2>
+    <p>Enter your email to get 2 full intelligence briefs per week plus the weekly editorial post — all free. You'll also join the Savannah Flow newsletter.</p>
+    <input class="modal-in" id="signupEmail" type="email" placeholder="your@email.com"/>
+    <button class="modal-btn" onclick="submitSignup()">Get free access</button>
+    <div class="modal-err" id="signupErr"></div>
+    <div class="modal-skip" onclick="closeModal('signupModal')">Not now</div>
+    <div class="modal-note">Joins the Savannah Flow newsletter. Unsubscribe any time.</div>
+  </div>
+</div>
+
+<!-- ── AUTH MODAL (sign in / create account) ── -->
+<div class="modal-bg" id="authModal">
+  <div class="modal">
+    <div class="modal-icon">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <circle cx="10" cy="7" r="3.5" stroke="#C9A84C" stroke-width="1.5"/>
+        <path d="M3 18c0-3.5 3.1-6 7-6s7 2.5 7 6" stroke="#C9A84C" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <h2 id="authTitle">Sign in</h2>
+    <p id="authDesc">Sign in to access your saved briefs from any device.</p>
+    <div class="modal-tabs">
+      <button class="m-tab on" id="tabLogin" onclick="switchAuthTab('login')">Sign in</button>
+      <button class="m-tab" id="tabSignup" onclick="switchAuthTab('signup')">Create account</button>
+    </div>
+    <input class="modal-in" id="authEmail" type="email" placeholder="your@email.com"/>
+    <input class="modal-in" id="authPass" type="password" placeholder="Password (min 6 characters)" style="display:none"/>
+    <button class="modal-btn" id="authSubmitBtn" onclick="submitAuth()">Send magic link</button>
+    <div class="modal-err" id="authErr"></div>
+    <div class="modal-skip" onclick="closeModal('authModal')">Cancel</div>
+    <div class="modal-note" id="authNote">A sign-in link will be emailed to you — no password needed.</div>
+  </div>
+</div>
+
+<!-- ── UPGRADE MODAL ── -->
+<div class="modal-bg" id="upgradeModal">
+  <div class="modal">
+    <div class="modal-icon">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+        <path d="M10 3l2.5 5 5.5.8-4 3.9.95 5.5L10 15.5l-4.95 2.6L6 12.7 2 8.8l5.5-.8L10 3z" stroke="#C9A84C" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <h2>Upgrade your access</h2>
+    <p>Choose a plan to unlock deeper intelligence briefs and more searches per week.</p>
+
+    <div class="tier-option" id="opt-pro" onclick="selectTier('pro')">
+      <div class="tier-name-lbl">Pro</div>
+      <div class="tier-price-lbl">KSh 1,000 / month</div>
+      <div class="tier-feats">30 searches per week · Full 8-section briefs · All sections unlocked · Cloud saved history</div>
+    </div>
+    <div class="tier-option" id="opt-elite" onclick="selectTier('elite')">
+      <div class="tier-name-lbl">Elite</div>
+      <div class="tier-price-lbl">KSh 1,500 / month</div>
+      <div class="tier-feats">Unlimited searches · Priority brief generation · Full 8-section briefs · Everything unlocked</div>
+    </div>
+
+    <div style="margin-top:12px">
+      <input class="modal-in" id="mpesaPhone" type="tel" placeholder="M-Pesa number e.g. 0712345678"/>
+      <button class="modal-btn" id="payBtn" onclick="initiatePayment()" disabled>Pay with M-Pesa</button>
+      <div class="modal-err" id="payErr"></div>
+    </div>
+
+    <div class="divider">or</div>
+    <button class="modal-btn outline" onclick="closeModal('upgradeModal');showAuth()">Sign in — already subscribed</button>
+    <div class="modal-skip" onclick="closeModal('upgradeModal')">Maybe later</div>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div class="toast" id="toast"></div>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="ft">
+    <span>Savannah Flow · African Intelligence Platform</span>
+    <span id="eatClock"></span>
+  </div>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// CONFIGURATION — replace all three values
+// ═══════════════════════════════════════════════════════
+const WORKER_URL   = "https://savannahflowworker.emoenga07.workers.dev/";
+// e.g. "https://savannah-flow-worker.yourname.workers.dev"
+
+const SUPABASE_URL = "https://jtkstrxravqiclvqgfsm.supabase.co";
+// e.g. "https://abcdefgh.supabase.co"
+
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0a3N0cnhyYXZxaWNsdnFnZnNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4OTA2NTYsImV4cCI6MjA4OTQ2NjY1Nn0.Hbyy8iwfENQZI2G3lIlreD0ZnxIvoTS2IE7GQOnU_Wc";
+// e.g. "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+const SUBSTACK_URL = "https://savannahflow.substack.com";
+// e.g. "https://savannahflow.substack.com"
+// ═══════════════════════════════════════════════════════
+
+// ── SUPABASE INIT ──
+let sb = null;
+try {
+  sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  initAuth();
+} catch(e) { console.warn("Supabase not configured"); }
+
+// ── STATE ──
+let user        = null;
+let userTier    = "guest";
+let userProfile = null;
+let authMode    = "login";
+let activeTopic = "";
+let localHistory= [];
+let selectedUpgradeTier = null;
+let briefsGenerated = 0;
+
+// ── CLOCK ──
+function updateClock(){
+  const t = new Date().toLocaleTimeString("en-KE",{hour:"2-digit",minute:"2-digit",timeZone:"Africa/Nairobi"});
+  const el = document.getElementById("eatClock");
+  if(el) el.textContent = t + " EAT";
+}
+updateClock(); setInterval(updateClock,15000);
+
+// ── INIT — load ticker, trending, weekly post ──
+async function initContent(){
+  loadTicker();
+  loadTrending();
+  loadWeeklyPost();
+}
+
+async function loadTicker(){
+  try {
+    const res  = await fetch(WORKER_URL + "/ticker");
+    const data = await res.json();
+    const items = data.ticker || [];
+    if(items.length === 0) return;
+    const track = document.getElementById("tickerTrack");
+    // Double items for seamless loop
+    const all   = [...items, ...items];
+    track.innerHTML = all.map(t => `<span class="ticker-item">${t}</span>`).join("");
+  } catch(_){}
+}
+
+async function loadTrending(){
+  try {
+    const res  = await fetch(WORKER_URL + "/trending");
+    const data = await res.json();
+    const topics = data.trending || [];
+    const area   = document.getElementById("trendingArea");
+    if(topics.length === 0){ area.style.display="none"; return; }
+    area.innerHTML = `<span class="trend-label">Trending this week</span>` +
+      topics.map(t => `<button class="trend-pill" onclick="fillSearch('${t.replace(/'/g,"\\'")}')"> ${t}</button>`).join("");
+  } catch(_){}
+}
+
+async function loadWeeklyPost(){
+  try {
+    const res  = await fetch(`${WORKER_URL}/weekly-post?tier=${userTier}`);
+    const data = await res.json();
+    if(!data.post) return;
+    const sec  = document.getElementById("weeklySection");
+    const card = document.getElementById("weeklyPostCard");
+    sec.style.display = "block";
+    card.innerHTML    = buildBriefCard({
+      query: data.post.title,
+      brief: data.post.brief,
+      sources: [],
+      confidence: "high",
+      isTruncated: data.post.is_truncated,
+      isWeekly: true,
+    });
+  } catch(_){}
+}
+
+// ── TOPIC ──
+function setTopic(btn,t){
+  document.querySelectorAll(".t-btn").forEach(b=>b.classList.remove("on"));
+  btn.classList.add("on"); activeTopic = t;
+}
+
+function fillSearch(text){
+  document.getElementById("qin").value = text;
+  document.getElementById("qin").focus();
+}
+
+// ── AUTH ──────────────────────────────────────────────
+function initAuth(){
+  if(!sb) return;
+  sb.auth.getSession().then(({data:{session}})=>{ if(session) onSignIn(session.user); });
+  sb.auth.onAuthStateChange((_,session)=>{ if(session) onSignIn(session.user); else onSignOut(); });
+}
+
+async function onSignIn(u){
+  user = u;
+  closeModal("authModal");
+  closeModal("signupModal");
+
+  // Load profile
+  if(sb){
+    const {data} = await sb.from("profiles").select("*").eq("id",u.id).single();
+    if(data){
+      userProfile = data;
+      userTier    = data.tier || "basic";
+    } else {
+      // Create profile for new user
+      await sb.from("profiles").insert({id:u.id, email:u.email, tier:"basic"});
+      userTier = "basic";
+    }
+  }
+
+  updateUI();
+  loadWeeklyPost();
+  loadCloudHistory();
+  toast("Welcome back ✓");
+}
+
+function onSignOut(){
+  user = null; userTier = "guest"; userProfile = null;
+  updateUI();
+}
+
+function updateUI(){
+  const aa  = document.getElementById("authArea");
+  const tb  = document.getElementById("tierBadge");
+  const ub  = document.getElementById("upgradeBtn");
+  const sl  = document.getElementById("searchesLeft");
+
+  // Tier badge
+  tb.className = `tier-badge tier-${userTier}`;
+  tb.textContent = userTier.charAt(0).toUpperCase() + userTier.slice(1);
+
+  // Auth area
+  if(user){
+    const display = (user.email||"").split("@")[0];
+    aa.innerHTML = `<span style="font-size:12px;color:var(--gold)">${display}</span> <button class="hd-btn" onclick="signOut()">Sign out</button>`;
+    ub.style.display = (userTier === "basic") ? "block" : "none";
+  } else {
+    aa.innerHTML = `<button class="hd-btn" onclick="showAuth()">Sign in</button>`;
+    ub.style.display = "none";
+  }
+
+  // Searches left
+  if(userProfile && userTier !== "elite"){
+    const limit = {basic:2,pro:30,elite:999}[userTier]||0;
+    const used  = userProfile.searches_used_this_week || 0;
+    const left  = Math.max(0, limit - used);
+    sl.innerHTML = `Searches: <span>${userTier==="elite"?"∞":left}</span> left this week`;
+    sl.style.display = "block";
+  } else if(userTier === "elite"){
+    sl.innerHTML = `Searches: <span>∞</span>`;
+    sl.style.display = "block";
+  } else {
+    sl.style.display = "none";
+  }
+}
+
+function showAuth(){
+  authMode = "login";
+  switchAuthTab("login");
+  document.getElementById("authEmail").value = "";
+  document.getElementById("authPass").value  = "";
+  document.getElementById("authErr").textContent = "";
+  document.getElementById("authModal").classList.add("show");
+}
+
+function switchAuthTab(mode){
+  authMode = mode;
+  document.getElementById("tabLogin").classList.toggle("on",  mode==="login");
+  document.getElementById("tabSignup").classList.toggle("on", mode==="signup");
+  document.getElementById("authTitle").textContent = mode==="login" ? "Sign in" : "Create account";
+  document.getElementById("authDesc").textContent  = mode==="login"
+    ? "Sign in to access your saved briefs from any device."
+    : "Create an account to save briefs permanently.";
+  document.getElementById("authSubmitBtn").textContent = mode==="login" ? "Send magic link" : "Create account";
+  document.getElementById("authNote").textContent = mode==="login"
+    ? "A sign-in link will be emailed to you — no password needed."
+    : "You will receive a confirmation email.";
+  document.getElementById("authPass").style.display = mode==="signup" ? "block" : "none";
+}
+
+async function submitAuth(){
+  if(!sb){ toast("Supabase not configured"); return; }
+  const email = document.getElementById("authEmail").value.trim();
+  const pass  = document.getElementById("authPass").value;
+  const errEl = document.getElementById("authErr");
+  const btn   = document.getElementById("authSubmitBtn");
+  errEl.textContent = "";
+  if(!email||!email.includes("@")){ errEl.textContent="Enter a valid email."; return; }
+  btn.disabled=true; btn.textContent="Processing...";
+  try {
+    if(authMode==="login"){
+      const {error} = await sb.auth.signInWithOtp({email,options:{emailRedirectTo:window.location.href}});
+      if(error) throw error;
+      toast("Magic link sent — check your email");
+      closeModal("authModal");
+    } else {
+      if(pass.length<6){ errEl.textContent="Password must be at least 6 characters."; btn.disabled=false; btn.textContent="Create account"; return; }
+      const {error} = await sb.auth.signUp({email,password:pass,options:{emailRedirectTo:window.location.href}});
+      if(error) throw error;
+      toast("Account created — check your email to confirm");
+      closeModal("authModal");
+    }
+  } catch(err){ errEl.textContent = err.message||"Something went wrong."; }
+  btn.disabled=false;
+  btn.textContent = authMode==="login" ? "Send magic link" : "Create account";
+}
+
+async function signOut(){
+  if(sb) await sb.auth.signOut();
+  onSignOut(); toast("Signed out");
+}
+
+// ── SIGNUP (email capture → Substack → Basic) ──────────
+function showSignup(){
+  document.getElementById("signupEmail").value="";
+  document.getElementById("signupErr").textContent="";
+  document.getElementById("signupModal").classList.add("show");
+}
+
+async function submitSignup(){
+  const email = document.getElementById("signupEmail").value.trim();
+  const errEl = document.getElementById("signupErr");
+  errEl.textContent="";
+  if(!email||!email.includes("@")){ errEl.textContent="Enter a valid email."; return; }
+
+  const btn = document.querySelector("#signupModal .modal-btn");
+  btn.disabled=true; btn.textContent="Joining...";
+
+  // POST to Substack
+  fetch(`${SUBSTACK_URL}/api/v1/free`,{
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({email})
+  }).catch(()=>{});
+
+  // Create Supabase account with magic link
+  if(sb){
+    await sb.auth.signInWithOtp({email,options:{emailRedirectTo:window.location.href}}).catch(()=>{});
+  }
+
+  closeModal("signupModal");
+  toast("Welcome! Check your email for your sign-in link ✓");
+  btn.disabled=false; btn.textContent="Get free access";
+}
+
+// ── UPGRADE / PAYMENT ──────────────────────────────────
+function showUpgrade(){
+  selectedUpgradeTier = null;
+  document.getElementById("opt-pro").classList.remove("selected");
+  document.getElementById("opt-elite").classList.remove("selected");
+  document.getElementById("payBtn").disabled = true;
+  document.getElementById("mpesaPhone").value = "";
+  document.getElementById("payErr").textContent = "";
+  document.getElementById("upgradeModal").classList.add("show");
+}
+
+function selectTier(tier){
+  selectedUpgradeTier = tier;
+  document.getElementById("opt-pro").classList.toggle("selected",   tier==="pro");
+  document.getElementById("opt-elite").classList.toggle("selected", tier==="elite");
+  document.getElementById("payBtn").disabled = false;
+  document.getElementById("payBtn").textContent = tier==="elite"
+    ? "Pay KSh 1,500 with M-Pesa"
+    : "Pay KSh 1,000 with M-Pesa";
+}
+
+async function initiatePayment(){
+  if(!selectedUpgradeTier){ toast("Select a plan first"); return; }
+  if(!user){ closeModal("upgradeModal"); showAuth(); return; }
+
+  const phone = document.getElementById("mpesaPhone").value.trim();
+  const errEl = document.getElementById("payErr");
+  const btn   = document.getElementById("payBtn");
+  errEl.textContent = "";
+
+  if(!phone||phone.length<9){ errEl.textContent="Enter a valid M-Pesa number."; return; }
+
+  btn.disabled=true; btn.textContent="Sending M-Pesa prompt...";
+
+  try {
+    const res  = await fetch(WORKER_URL+"/initiate-payment",{
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({phone, tier:selectedUpgradeTier, user_id:user.id, email:user.email})
+    });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+
+    closeModal("upgradeModal");
+    toast("M-Pesa prompt sent — enter your PIN to complete ✓");
+
+    // Poll for tier upgrade (check every 5s for 60s)
+    let checks = 0;
+    const poll = setInterval(async()=>{
+      checks++;
+      if(sb){
+        const {data:profile} = await sb.from("profiles").select("tier").eq("id",user.id).single();
+        if(profile && profile.tier !== "basic"){
+          clearInterval(poll);
+          userTier = profile.tier;
+          userProfile = {...userProfile, tier:profile.tier};
+          updateUI();
+          toast(`Upgraded to ${profile.tier} ✓`);
+        }
+      }
+      if(checks >= 12) clearInterval(poll);
+    }, 5000);
+
+  } catch(err){
+    errEl.textContent = err.message||"Payment failed. Try again.";
+  }
+  btn.disabled=false;
+  btn.textContent = selectedUpgradeTier==="elite" ? "Pay KSh 1,500 with M-Pesa" : "Pay KSh 1,000 with M-Pesa";
+}
+
+// ── SEARCH / BRIEF GENERATION ──────────────────────────
+async function runSearch(){
+  const query = document.getElementById("qin").value.trim();
+  if(!query) return;
+
+  // Gate: guest must sign up
+  if(userTier === "guest"){
+    showSignup();
+    return;
+  }
+
+  // Gate: not signed in
+  if(!user){
+    showSignup();
+    return;
+  }
+
+  const btn  = document.getElementById("sbtn");
+  const main = document.getElementById("mainArea");
+  btn.disabled=true; btn.textContent="Researching...";
+
+  const cardId = "c" + Date.now();
+  const ts = new Date().toLocaleTimeString("en-KE",{hour:"2-digit",minute:"2-digit",timeZone:"Africa/Nairobi"}) + " EAT";
+  const topicLabel = activeTopic || "Africa-wide";
+
+  // Insert loading card
+  const card = document.createElement("div");
+  card.id    = cardId;
+  card.className = "bcard";
+  card.innerHTML = `
+    <div class="bhead">
+      <div class="bmeta">
+        <div class="ldot pulse"></div>
+        <span class="blabel" id="lbl_${cardId}">Research pass 1 of 2 · ${topicLabel}</span>
+      </div>
+      <div class="bacts"><span class="btime">${ts}</span></div>
+    </div>
+    <div class="bbody" id="body_${cardId}">
+      <div class="loading">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <span class="ltxt" id="ltxt_${cardId}">Scanning African sources…</span>
+        <span class="phase-tag" id="ptag_${cardId}">Pass 1 — Research</span>
+      </div>
+    </div>`;
+
+  const hist = document.getElementById("histSec");
+  const weekly = document.getElementById("weeklySection");
+  if(hist) main.insertBefore(card, hist);
+  else if(weekly) main.insertBefore(card, weekly.nextSibling);
+  else main.insertBefore(card, main.firstChild);
+
+  card.scrollIntoView({behavior:"smooth",block:"start"});
+
+  // Cycle loading messages
+  const msgs1 = ["Scanning African sources…","Reading Reuters, Bloomberg Africa…","Pulling local outlet data…","Cross-referencing sources…"];
+  const msgs2 = ["Synthesising research…","Applying editorial standards…","Writing full brief…","Almost done…"];
+  let mi = 0;
+  const interval = setInterval(()=>{
+    mi++;
+    const ltxt = document.getElementById("ltxt_"+cardId);
+    const ptag = document.getElementById("ptag_"+cardId);
+    const lbl  = document.getElementById("lbl_"+cardId);
+    if(!ltxt) return;
+    if(mi < 4){ ltxt.textContent = msgs1[mi%msgs1.length]; }
+    else {
+      ltxt.textContent = msgs2[(mi-4)%msgs2.length];
+      if(ptag) ptag.textContent = "Pass 2 — Synthesis";
+      if(lbl)  lbl.textContent  = "Synthesising · " + topicLabel;
+    }
+  }, 2200);
+
+  let brief="", sources=[], confidence="medium", conflicting=null, briefType="4section";
+
+  try {
+    const res = await fetch(WORKER_URL+"/query",{
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        query, topic_filter:activeTopic,
+        user_id: user?.id, tier: userTier
+      })
+    });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+    brief      = data.brief      || "";
+    sources    = data.sources    || [];
+    confidence = data.confidence || "medium";
+    conflicting= data.conflicting_reports || null;
+    briefType  = data.brief_type || "4section";
+  } catch(err){
+    brief = `__ERROR__${err.message}`;
+  }
+
+  clearInterval(interval);
+
+  const bodyEl = document.getElementById("body_"+cardId);
+  const lblEl  = document.getElementById("lbl_"+cardId);
+  const dot    = card.querySelector(".ldot");
+
+  if(dot) dot.classList.remove("pulse");
+  if(lblEl) lblEl.textContent = (briefType==="8section" ? "Intelligence Brief" : "Signal Brief") + " · " + topicLabel;
+
+  if(brief.startsWith("__ERROR__")){
+    if(bodyEl) bodyEl.innerHTML = `<div class="err-box">${brief.replace("__ERROR__","")}</div>`;
+  } else {
+    // Build full card content
+    if(bodyEl){
+      bodyEl.innerHTML = renderBriefBody(brief, briefType, userTier);
+    }
+
+    // Sources strip
+    if(sources.length || conflicting){
+      const strip = document.createElement("div");
+      strip.className = "src-strip";
+      strip.innerHTML = `
+        <span class="src-label">Sources</span>
+        <div class="src-pills">${sources.map(s=>`<span class="src-pill">${s}</span>`).join("")}</div>
+        <span class="conf-badge conf-${confidence}">${confidence} confidence</span>
+        ${conflicting ? `<div class="conflict-note">Conflicting reports: ${conflicting}</div>` : ""}
+      `;
+      card.appendChild(strip);
+    }
+
+    // Action buttons
+    const actsEl = card.querySelector(".bacts");
+    if(actsEl){
+      actsEl.innerHTML = `
+        <span class="btime">${ts}</span>
+        <button class="ibtn" onclick="saveBrief('${cardId}',this)">+ Save</button>
+        <button class="ibtn" onclick="navigator.clipboard.writeText(document.getElementById('body_${cardId}').innerText).then(()=>toast('Copied ✓'))">Copy</button>
+        <button class="ibtn" onclick="window.print()">PDF</button>
+      `;
+    }
+
+    // Store data on card
+    card.dataset.query  = query;
+    card.dataset.brief  = brief;
+    card.dataset.sources= JSON.stringify(sources);
+    card.dataset.conf   = confidence;
+    card.dataset.type   = briefType;
+    card.dataset.time   = ts;
+
+    // Update profile search count locally
+    if(userProfile) userProfile.searches_used_this_week = (userProfile.searches_used_this_week||0)+1;
+    updateUI();
+
+    briefsGenerated++;
+    if(briefsGenerated % 2 === 0 && userTier === "basic") showUpsellCard();
+  }
+
+  btn.disabled=false; btn.textContent="Analyse ↗";
+}
+
+// ── RENDER BRIEF BODY ──────────────────────────────────
+function renderBriefBody(brief, briefType, tier){
+  if(briefType === "4section"){
+    return render4Section(brief, tier);
+  }
+  return render8Section(brief);
+}
+
+function parseMd(text){
+  const sections = text.split(/\n(?=\*\*[^*\n]+\*\*)/);
+  let html = "";
+  sections.forEach(s=>{
+    const t = s.trim(); if(!t) return;
+    const m = t.match(/^\*\*(.+?)\*\*\s*[-—]?\s*([\s\S]*)/);
+    if(m){
+      const title = m[1].trim();
+      const body  = m[2].trim().replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/\n\n+/g,"</p><p>").replace(/\n/g," ");
+      html += `<h3>${title}</h3><p>${body}</p>`;
+    } else {
+      html += `<p>${t.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/\n\n+/g,"</p><p>").replace(/\n/g," ")}</p>`;
+    }
+  });
+  return html;
+}
+
+function render4Section(brief, tier){
+  // Check if brief has [BLUR_START] marker
+  const blurIdx = brief.indexOf("[BLUR_START]");
+  if(blurIdx === -1){
+    // No blur marker — check tier
+    if(tier === "basic"){
+      // Split at Hidden Dynamics
+      const lines    = brief.split("\n");
+      const visible  = [];
+      const blurred  = [];
+      let   found    = 0;
+      for(const line of lines){
+        if(line.startsWith("**") && line.includes("**")) found++;
+        if(found <= 2) visible.push(line);
+        else blurred.push(line);
+      }
+      return parseMd(visible.join("\n")) + buildBlurWall(blurred.join("\n"));
+    }
+    return parseMd(brief);
+  }
+
+  const visible = brief.substring(0, blurIdx);
+  const hidden  = brief.substring(blurIdx + 12);
+  return parseMd(visible) + buildBlurWall(hidden);
+}
+
+function render8Section(brief){
+  return parseMd(brief);
+}
+
+function buildBlurWall(hiddenText){
+  const preview = parseMd(hiddenText.split("\n").slice(0,6).join("\n"));
+  return `
+    <div class="blur-wall">
+      <div class="blur-content">${preview}</div>
+      <div class="blur-overlay">
+        <div class="blur-title">Unlock the full analysis</div>
+        <div class="blur-sub">Hidden Dynamics and Positioning Playbook are available on Pro and Elite plans.</div>
+        <div class="blur-btns">
+          <button class="upgrade-btn" onclick="showUpgrade()">Upgrade to Pro — KSh 1,000/mo</button>
+          <button class="upgrade-btn outline" onclick="showUpgrade()">Elite — KSh 1,500/mo</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function buildBriefCard({query,brief,sources,confidence,isTruncated,isWeekly}){
+  const tier = userTier;
+  const ts   = new Date().toLocaleTimeString("en-KE",{hour:"2-digit",minute:"2-digit",timeZone:"Africa/Nairobi"}) + " EAT";
+  const id   = "wc" + Date.now();
+  const label= isWeekly ? "Weekly Editorial Brief" : "Intelligence Brief";
+  let bodyHtml = parseMd(brief);
+  if(isTruncated){
+    bodyHtml += buildBlurWall("Hidden Dynamics and Positioning Playbook...");
+  }
+  return `
+    <div class="bcard" id="${id}">
+      <div class="bhead">
+        <div class="bmeta">
+          <div class="ldot"></div>
+          <span class="blabel">${label}</span>
+        </div>
+        <div class="bacts"><span class="btime">${ts}</span></div>
+      </div>
+      <div class="bbody">${bodyHtml}</div>
+      ${sources&&sources.length?`<div class="src-strip"><span class="src-label">Sources</span><div class="src-pills">${sources.map(s=>`<span class="src-pill">${s}</span>`).join("")}</div><span class="conf-badge conf-${confidence}">${confidence}</span></div>`:""}
+    </div>`;
+}
+
+// ── SAVE BRIEF ─────────────────────────────────────────
+async function saveBrief(cardId, btn){
+  const card = document.getElementById(cardId);
+  if(!card) return;
+  btn.disabled=true; btn.textContent="Saving…";
+
+  const query   = card.dataset.query  || "";
+  const brief   = card.dataset.brief  || "";
+  const sources = JSON.parse(card.dataset.sources||"[]");
+  const conf    = card.dataset.conf   || "medium";
+  const time    = card.dataset.time   || "";
+  const type    = card.dataset.type   || "4section";
+
+  let saved = false;
+  if(sb && user){
+    const {error} = await sb.from("briefs").insert({
+      user_id: user.id, query, brief, brief_type:type,
+      sources, confidence:conf, topic_filter:activeTopic||null
+    });
+    saved = !error;
+  }
+
+  localHistory.unshift({query, html:renderBriefBody(brief,type,userTier), time, sources, confidence:conf, fromCloud:saved});
+  renderHistory();
+
+  btn.textContent = saved ? "Saved ✓ cloud" : "Saved ✓";
+  btn.style.color = "var(--ok)";
+  toast(saved ? "Brief saved to your account ✓" : "Brief saved for this session ✓");
+
+  setTimeout(()=>{
+    const h = document.getElementById("histSec");
+    if(h) h.scrollIntoView({behavior:"smooth",block:"start"});
+  },400);
+}
+
+// ── CLOUD HISTORY ──────────────────────────────────────
+async function loadCloudHistory(){
+  if(!sb||!user) return;
+  try {
+    const {data} = await sb.from("briefs").select("*").eq("user_id",user.id).order("created_at",{ascending:false}).limit(20);
+    if(!data) return;
+    const cloud = data.map(r=>({
+      query:r.query,
+      html:renderBriefBody(r.brief,r.brief_type||"4section",userTier),
+      time:new Date(r.created_at).toLocaleString("en-KE",{timeZone:"Africa/Nairobi",hour:"2-digit",minute:"2-digit",day:"numeric",month:"short"}),
+      sources:r.sources||[], confidence:r.confidence, fromCloud:true
+    }));
+    localHistory = [...cloud,...localHistory.filter(l=>!l.fromCloud)];
+    renderHistory();
+  } catch(_){}
+}
+
+function renderHistory(){
+  const main = document.getElementById("mainArea");
+  let sec    = document.getElementById("histSec");
+  if(localHistory.length===0){ if(sec) sec.remove(); return; }
+  if(!sec){
+    sec = document.createElement("div");
+    sec.id="histSec"; sec.className="hist-sec";
+    main.appendChild(sec);
+  }
+  sec.innerHTML = `
+    <div class="hist-hd">
+      <span class="hist-title">Saved briefs (${localHistory.length})</span>
+      <button class="clr-btn" onclick="clearHistory()">Clear</button>
+    </div>
+    ${localHistory.map((b,i)=>`
+      <div class="hi" id="hi${i}">
+        <div class="hi-head" onclick="toggleHi(${i})">
+          <span class="hi-q">${b.query}</span>
+          <span class="hi-meta">
+            ${b.fromCloud?'<span class="cloud-tag">cloud</span>':''}
+            <span class="conf-badge conf-${b.confidence||'medium'}">${b.confidence||'medium'}</span>
+            <span class="hi-time">${b.time}</span>
+            <span class="hi-chev">▼</span>
+          </span>
+        </div>
+        <div class="hi-body">${b.html}
+          ${b.sources&&b.sources.length?`<div style="margin-top:8px;padding-top:7px;border-top:.5px solid var(--bdr)"><span style="font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--text-d)">Sources — </span>${b.sources.map(s=>`<span style="font-size:11px;color:var(--text-m);margin-right:7px">${s}</span>`).join("")}</div>`:""}
+        </div>
+      </div>
+    `).join("")}
+  `;
+}
+
+function toggleHi(i){ document.getElementById("hi"+i)?.classList.toggle("open"); }
+function clearHistory(){ localHistory=[]; renderHistory(); }
+
+// ── UPSELL ─────────────────────────────────────────────
+function showUpsellCard(){
+  const main = document.getElementById("mainArea");
+  const u    = document.createElement("div");
+  u.className = "upsell";
+  u.innerHTML = `
+    <div class="upsell-txt"><strong>Unlock the full analysis.</strong> Upgrade to Pro for complete 8-section briefs with all sections visible — KSh 1,000/month.</div>
+    <a class="upsell-lnk" href="#" onclick="event.preventDefault();showUpgrade()">Upgrade →</a>
+  `;
+  const hist = document.getElementById("histSec");
+  if(hist) main.insertBefore(u,hist); else main.insertBefore(u,main.firstChild);
+  setTimeout(()=>u.remove(),12000);
+}
+
+// ── MODAL HELPERS ──────────────────────────────────────
+function closeModal(id){ document.getElementById(id)?.classList.remove("show"); }
+
+// Close modal on backdrop click
+document.querySelectorAll(".modal-bg").forEach(bg=>{
+  bg.addEventListener("click",e=>{ if(e.target===bg) bg.classList.remove("show"); });
+});
+
+// ── TOAST ──────────────────────────────────────────────
+function toast(msg){
+  const t = document.getElementById("toast");
+  t.textContent=msg; t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),2600);
+}
+
+// ── ENTER KEY ──────────────────────────────────────────
+document.getElementById("qin").addEventListener("keydown",e=>{ if(e.key==="Enter") runSearch(); });
+
+// ── INIT ───────────────────────────────────────────────
+initContent();
+updateUI();
+</script>
+</body>
+</html>
