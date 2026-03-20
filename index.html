@@ -383,8 +383,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text);m
     </div>
 
     <div style="margin-top:12px">
-      <input class="modal-in" id="mpesaPhone" type="tel" placeholder="M-Pesa number e.g. 0712345678"/>
-      <button class="modal-btn" id="payBtn" onclick="initiatePayment()" disabled>Pay with M-Pesa</button>
+      <button class="modal-btn" id="payBtn" onclick="initiatePayment()" disabled>Pay with M-Pesa or Card ↗</button>
       <div class="modal-err" id="payErr"></div>
     </div>
 
@@ -418,7 +417,9 @@ const SUPABASE_URL = "https://jtkstrxravqiclvqgfsm.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0a3N0cnhyYXZxaWNsdnFnZnNtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM4OTA2NTYsImV4cCI6MjA4OTQ2NjY1Nn0.Hbyy8iwfENQZI2G3lIlreD0ZnxIvoTS2IE7GQOnU_Wc";
 // e.g. "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 
-const SUBSTACK_URL = "https://savannahflow.substack.com";
+const SUBSTACK_URL = "https://YOUR_PUBLICATION.substack.com";
+const PAYSTACK_KEY  = "YOUR_PAYSTACK_PUBLIC_KEY";
+// e.g. "pk_live_xxxxxxxxxxxxxxxxxxxx"
 // e.g. "https://savannahflow.substack.com"
 // ═══════════════════════════════════════════════════════
 
@@ -597,11 +598,11 @@ function switchAuthTab(mode){
   document.getElementById("authDesc").textContent  = mode==="login"
     ? "Sign in to access your saved briefs from any device."
     : "Create an account to save briefs permanently.";
-  document.getElementById("authSubmitBtn").textContent = mode==="login" ? "Send magic link" : "Create account";
+  document.getElementById("authSubmitBtn").textContent = mode==="login" ? "Sign in" : "Create account";
   document.getElementById("authNote").textContent = mode==="login"
     ? "A sign-in link will be emailed to you — no password needed."
     : "You will receive a confirmation email.";
-  document.getElementById("authPass").style.display = mode==="signup" ? "block" : "none";
+  document.getElementById("authPass").style.display = "block"; // show password for both login and signup
 }
 
 async function submitAuth(){
@@ -615,9 +616,9 @@ async function submitAuth(){
   btn.disabled=true; btn.textContent="Processing...";
   try {
     if(authMode==="login"){
-      const {error} = await sb.auth.signInWithOtp({email,options:{emailRedirectTo:window.location.href}});
+      // Email + password login — works on laptop and phone without magic link
+      const {error} = await sb.auth.signInWithPassword({email, password:pass});
       if(error) throw error;
-      toast("Magic link sent — check your email");
       closeModal("authModal");
     } else {
       if(pass.length<6){ errEl.textContent="Password must be at least 6 characters."; btn.disabled=false; btn.textContent="Create account"; return; }
@@ -674,7 +675,7 @@ function showUpgrade(){
   document.getElementById("opt-pro").classList.remove("selected");
   document.getElementById("opt-elite").classList.remove("selected");
   document.getElementById("payBtn").disabled = true;
-  document.getElementById("mpesaPhone").value = "";
+  
   document.getElementById("payErr").textContent = "";
   document.getElementById("upgradeModal").classList.add("show");
 }
@@ -685,56 +686,73 @@ function selectTier(tier){
   document.getElementById("opt-elite").classList.toggle("selected", tier==="elite");
   document.getElementById("payBtn").disabled = false;
   document.getElementById("payBtn").textContent = tier==="elite"
-    ? "Pay KSh 1,500 with M-Pesa"
-    : "Pay KSh 1,000 with M-Pesa";
+    ? "Pay KSh 1,500 with M-Pesa or Card ↗"
+    : "Pay KSh 1,000 with M-Pesa or Card ↗";
 }
 
 async function initiatePayment(){
   if(!selectedUpgradeTier){ toast("Select a plan first"); return; }
   if(!user){ closeModal("upgradeModal"); showAuth(); return; }
 
-  const phone = document.getElementById("mpesaPhone").value.trim();
   const errEl = document.getElementById("payErr");
   const btn   = document.getElementById("payBtn");
   errEl.textContent = "";
 
-  if(!phone||phone.length<9){ errEl.textContent="Enter a valid M-Pesa number."; return; }
-
-  btn.disabled=true; btn.textContent="Sending M-Pesa prompt...";
+  btn.disabled=true; btn.textContent="Creating payment link...";
 
   try {
+    // Get Paystack payment link from Worker
     const res  = await fetch(WORKER_URL+"/initiate-payment",{
       method:"POST", headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({phone, tier:selectedUpgradeTier, user_id:user.id, email:user.email})
+      body:JSON.stringify({ tier:selectedUpgradeTier, user_id:user.id, email:user.email })
     });
     const data = await res.json();
     if(data.error) throw new Error(data.error);
 
-    closeModal("upgradeModal");
-    toast("M-Pesa prompt sent — enter your PIN to complete ✓");
+    // Store reference and tier for verification after return
+    localStorage.setItem("sf_pay_ref", data.reference);
+    localStorage.setItem("sf_pay_tier", selectedUpgradeTier);
+    localStorage.setItem("sf_pay_uid", user.id);
 
-    // Poll for tier upgrade (check every 5s for 60s)
-    let checks = 0;
-    const poll = setInterval(async()=>{
-      checks++;
-      if(sb){
-        const {data:profile} = await sb.from("profiles").select("tier").eq("id",user.id).single();
-        if(profile && profile.tier !== "basic"){
-          clearInterval(poll);
-          userTier = profile.tier;
-          userProfile = {...userProfile, tier:profile.tier};
-          updateUI();
-          toast(`Upgraded to ${profile.tier} ✓`);
-        }
-      }
-      if(checks >= 12) clearInterval(poll);
-    }, 5000);
+    closeModal("upgradeModal");
+    toast("Redirecting to payment page...");
+
+    // Redirect to Paystack payment page
+    // User pays with M-Pesa or card there, then returns to app
+    setTimeout(()=>{ window.location.href = data.payment_url; }, 800);
 
   } catch(err){
     errEl.textContent = err.message||"Payment failed. Try again.";
+    btn.disabled=false;
+    btn.textContent = selectedUpgradeTier==="elite" ? "Pay KSh 1,500 with M-Pesa or Card" : "Pay KSh 1,000 with M-Pesa or Card";
   }
-  btn.disabled=false;
-  btn.textContent = selectedUpgradeTier==="elite" ? "Pay KSh 1,500 with M-Pesa" : "Pay KSh 1,000 with M-Pesa";
+}
+
+// Called on page load — checks if user just returned from Paystack payment
+async function checkPaymentReturn(){
+  const ref  = localStorage.getItem("sf_pay_ref");
+  const tier = localStorage.getItem("sf_pay_tier");
+  const uid  = localStorage.getItem("sf_pay_uid");
+  if(!ref || !tier || !uid) return;
+
+  // Clear stored values
+  localStorage.removeItem("sf_pay_ref");
+  localStorage.removeItem("sf_pay_tier");
+  localStorage.removeItem("sf_pay_uid");
+
+  try {
+    const res = await fetch(WORKER_URL+"/verify-payment",{
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ reference:ref, user_id:uid })
+    });
+    const data = await res.json();
+    if(data.success){
+      userTier = data.tier;
+      if(userProfile) userProfile.tier = data.tier;
+      updateUI();
+      toast(`Payment confirmed — upgraded to ${data.tier} ✓`);
+    }
+  } catch(e){ console.error("Payment verify error:", e.message); }
 }
 
 // ── SEARCH / BRIEF GENERATION ──────────────────────────
@@ -826,7 +844,7 @@ async function runSearch(){
     conflicting= data.conflicting_reports || null;
     briefType  = data.brief_type || "4section";
   } catch(err){
-    brief = `__ERROR__${err.message || JSON.stringify(err)}`;
+    brief = `__ERROR__${err.message}`;
   }
 
   clearInterval(interval);
@@ -998,11 +1016,18 @@ async function saveBrief(cardId, btn){
 
   let saved = false;
   if(sb && user){
+    // Ensure profile exists before saving
+    if(!userProfile){
+      await sb.from("profiles")
+        .upsert({id:user.id, email:user.email, tier:"basic", searches_used_this_week:0, week_reset_at:new Date().toISOString()})
+        .catch(()=>{});
+    }
     const {error} = await sb.from("briefs").insert({
       user_id: user.id, query, brief, brief_type:type,
       sources, confidence:conf, topic_filter:activeTopic||null
     });
     saved = !error;
+    if(error) console.error("Save brief error:", error.message);
   }
 
   localHistory.unshift({query, html:renderBriefBody(brief,type,userTier), time, sources, confidence:conf, fromCloud:saved});
