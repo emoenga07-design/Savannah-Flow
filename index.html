@@ -353,7 +353,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text);m
     </div>
     <input class="modal-in" id="authEmail" type="email" placeholder="your@email.com"/>
     <input class="modal-in" id="authPass" type="password" placeholder="Password (min 6 characters)" style="display:none"/>
-    <button class="modal-btn" id="authSubmitBtn" onclick="submitAuth()">Send magic link</button>
+    <button class="modal-btn" id="authSubmitBtn" onclick="submitAuth()">Sign in</button>
     <div class="modal-err" id="authErr"></div>
     <div class="modal-skip" onclick="closeModal('authModal')">Cancel</div>
     <div class="modal-note" id="authNote">A sign-in link will be emailed to you — no password needed.</div>
@@ -629,7 +629,7 @@ async function submitAuth(){
     }
   } catch(err){ errEl.textContent = err.message||"Something went wrong."; }
   btn.disabled=false;
-  btn.textContent = authMode==="login" ? "Send magic link" : "Create account";
+  btn.textContent = authMode==="login" ? "Sign in" : "Create account";
 }
 
 async function signOut(){
@@ -659,9 +659,20 @@ async function submitSignup(){
     body:JSON.stringify({email})
   }).catch(()=>{});
 
-  // Create Supabase account with magic link
+  // Create Supabase account with magic link then sign them in
   if(sb){
-    await sb.auth.signInWithOtp({email,options:{emailRedirectTo:window.location.href}}).catch(()=>{});
+    // Sign up with a temporary password derived from their email
+    // They can set a real password later
+    const tempPass = email.split("@")[0] + "Savannah2026!";
+    const {error:signupErr} = await sb.auth.signUp({
+      email,
+      password: tempPass,
+      options:{emailRedirectTo:window.location.href}
+    });
+    if(!signupErr){
+      // Auto sign them in immediately
+      await sb.auth.signInWithPassword({email, password:tempPass}).catch(()=>{});
+    }
   }
 
   closeModal("signupModal");
